@@ -29,11 +29,27 @@ const server = http.createServer(async (req, res) => {
         const latest = [...messages].reverse().find(m => m.role === 'user')?.content || '';
         return send(res, 200, { mode:'demo', reply: demoReply(latest) });
       }
-      const response = await fetch(`${AI_BASE_URL}/chat/completions`, {
-        method:'POST', headers:{ 'Authorization':`Bearer ${AI_API_KEY}`, 'Content-Type':'application/json' },
-        body: JSON.stringify({ model:AI_MODEL, temperature:0.7, messages:[{ role:'system', content:'You are NEXORA AI, a helpful, clear, practical assistant for everyday work and small businesses. Respond in the user’s language. Be honest about limitations. Never claim to have completed an external action unless a connected tool actually did it. Ask before sending messages, making purchases, deleting data, or taking other consequential actions.' }, ...messages] }),
-        signal: AbortSignal.timeout(45000)
-      });
+      
+const response = await fetch(`${AI_BASE_URL}/chat/completions`, {
+  method: 'POST',
+  headers: {
+    'Authorization': `Bearer ${AI_API_KEY}`,
+    'Content-Type': 'application/json'
+  },
+  body: JSON.stringify({
+    model: AI_MODEL,
+    temperature: 0.7,
+    messages: [
+      {
+        role: 'system',
+        content: 'You are NEXORA AI, a helpful, clear, practical assistant for everyday work and small businesses. Respond in the user’s language. Be honest about limitations. Never claim to have completed an external action unless a connected tool actually did it. Ask before sending messages, making purchases, deleting data, or taking other consequential actions.'
+      },
+      ...messages
+    ]
+  }),
+  signal: AbortSignal.timeout(45000)
+});
+
       const data = await response.json().catch(() => ({}));
       if (!response.ok) return send(res, 502, { error: data?.error?.message || `AI provider returned status ${response.status}. Check API settings.` });
       const reply = data?.choices?.[0]?.message?.content;
