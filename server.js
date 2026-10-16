@@ -1,19 +1,5 @@
 
-import http from 'node:http';
-import { readFile } from 'node:fs/promises';
-import { extname, join, normalize } from 'node:path';
-import { fileURLToPath } from 'node:url';
 
-const __dirname = fileURLToPath(new URL('.', import.meta.url));
-const publicDir = join(__dirname, 'public');
-const PORT = Number(process.env.PORT || 3000);
-
-const AI_API_KEY = process.env.AI_API_KEY || '';
-const AI_BASE_URL = (
-  process.env.AI_BASE_URL || 'https://api.openai.com/v1'
-).replace(/\/$/, '');
-const AI_MODEL = process.env.AI_MODEL || 'gpt-4o-mini';
-const TAVILY_API_KEY = process.env.TAVILY_API_KEY || '';
 import http from 'node:http';
 import { readFile } from 'node:fs/promises';
 import { extname, join, normalize } from 'node:path';
