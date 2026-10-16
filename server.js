@@ -158,7 +158,44 @@ const server = http.createServer(async (req, res) => {
     req.method === 'POST' &&
     url.pathname === '/api/chat'
   ) {
-    try {
+    try { 
+      if (!SUPABASE_URL || !SUPABASE_ANON_KEY) {
+        return send(res, 503, {
+          error: 'Supabase authentication is not configured.'
+        });
+      }
+
+      const authHeader = req.headers.authorization || '';
+      const accessToken = authHeader.startsWith('Bearer ')
+        ? authHeader.slice(7)
+        : '';
+
+      if (!accessToken) {
+        return send(res, 401, {
+          error: 'Please sign in to use NEXORA AI.'
+        });
+      }
+
+      const authResponse = await fetch(
+        `${SUPABASE_URL}/auth/v1/user`,
+        {
+          headers: {
+            apikey: SUPABASE_ANON_KEY,
+            Authorization: `Bearer ${accessToken}`
+          },
+          signal: AbortSignal.timeout(10000)
+        }
+      );
+
+      if (!authResponse.ok) {
+        return send(res, 401, {
+          error: 'Your session is invalid or expired. Please sign in again.'
+        });
+      }
+      
+
+      
+      
       const body = await getBody(req);
 
       const messages = Array.isArray(body.messages)
@@ -204,6 +241,9 @@ const server = http.createServer(async (req, res) => {
           return send(res, 503, {
             error: 'Web Search চালু করতে Render-এ TAVILY_API_KEY যোগ করো।'
           });
+
+
+          
         }
 
         if (!AI_API_KEY) {
