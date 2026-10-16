@@ -508,10 +508,7 @@ function renderMessages() {
     els.messages.append(typing);
   }
 
-  window.scrollTo({
-    top: document.body.scrollHeight,
-    behavior: 'smooth'
-  });
+  ;
 }
 
 /* -------------------- Save conversation history -------------------- */
