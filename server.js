@@ -15,6 +15,8 @@ const AI_BASE_URL = (
 const AI_MODEL = process.env.AI_MODEL || 'gpt-4o-mini';
 const TAVILY_API_KEY = process.env.TAVILY_API_KEY || '';
 
+const SUPABASE_URL = process.env.SUPABASE_URL || '';
+const SUPABASE_ANON_KEY = process.env.SUPABASE_ANON_KEY || '';
 const mime = {
   '.html': 'text/html; charset=utf-8',
   '.css': 'text/css; charset=utf-8',
