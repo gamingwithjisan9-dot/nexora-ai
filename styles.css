@@ -232,3 +232,14 @@
   }
 }
   
+
+.auth-screen[hidden] {
+  display: none !important;
+}
+
+
+
+/* Hide login screen completely after successful login */
+.auth-screen[hidden] {
+  display: none !important;
+}
