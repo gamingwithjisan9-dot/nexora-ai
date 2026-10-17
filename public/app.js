@@ -612,13 +612,17 @@ async function sendMessage(text) {
         'Content-Type': 'application/json',
         'Authorization': 'Bearer ' + data.session.access_token
       },
-      body: JSON.stringify({
-        messages: state.messages.map(message => ({
-          role: message.role,
-          content: message.content
-        }))
-      })
-    });
+    
+body: JSON.stringify({
+  messages: state.messages.map(message => ({
+    role: message.role,
+    content: message.content
+  })),
+  webSearch: Boolean(
+    document.querySelector('#webSearchToggle')?.checked
+  )
+})
+
 
     const result = await response.json();
 
