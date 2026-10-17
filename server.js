@@ -122,9 +122,7 @@ async function searchWeb(query) {
       url: item.url,
       content: item.content.slice(0, 1200)
     }));
-}
 
-}
 
 function demoReply(text) {
   const q = text.toLowerCase();
