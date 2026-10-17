@@ -121,14 +121,23 @@ googleLogin?.addEventListener('click', async () => {
   if (error) showAuthMessage(error.message);
 });
 
+
 supabaseClient.auth.onAuthStateChange((_event, session) => {
   const signedIn = Boolean(session);
 
-  if (authScreen) authScreen.hidden = signedIn;
-  if (appShell) appShell.style.display = signedIn ? '' : 'none';
+  if (authScreen) {
+    authScreen.hidden = signedIn;
+  }
+
+  if (appShell) {
+    appShell.style.display = signedIn ? 'flex' : 'none';
+  }
 
   if (signedIn) {
     showAuthMessage('');
+  }
+});
+
   }
 });
 
