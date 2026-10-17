@@ -243,3 +243,31 @@
 .auth-screen[hidden] {
   display: none !important;
 }
+
+
+
+/* Keep the main workspace hidden until login */
+.app-shell.auth-locked {
+  display: none;
+}
+
+.app-shell.auth-locked:not([hidden]) {
+  display: none;
+}
+
+
+/* NEXORA AI — Login screen and workspace visibility */
+.app-shell.auth-locked {
+  display: none !important;
+}
+
+.auth-screen[hidden] {
+  display: none !important;
+}
+
+
+
+.auth-screen[hidden] {
+  display: none !important;
+}
+
