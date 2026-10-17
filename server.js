@@ -60,28 +60,40 @@ async function getBody(req) {
   return JSON.parse(data || '{}');
 }
 
+
 async function searchWeb(query) {
   if (!TAVILY_API_KEY) {
     throw new Error('Tavily API key is not configured.');
   }
 
-  const response = await fetch('https://api.tavily.com/search', {
-    method: 'POST',
-    headers: {
-      Authorization: `Bearer ${TAVILY_API_KEY}`,
-      'Content-Type': 'application/json'
-    },
-    body: JSON.stringify({
-      query,
-      topic: 'general',
-      search_depth: 'basic',
-      max_results: 5,
-      include_answer: false
-    }),
-    signal: AbortSignal.timeout(15000)
-  });
+  const response = await fetch(
+    'https://api.tavily.com/search',
+    {
+      method: 'POST',
+      headers: {
+        Authorization: `Bearer ${TAVILY_API_KEY}`,
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({
+        query,
+        topic: 'news',
+        search_depth: 'basic',
+        days: 7,
+        max_results: 5,
+        include_answer: false
+      }),
+      signal: AbortSignal.timeout(20000)
+    }
+  );
 
   if (!response.ok) {
+    const errorText = await response.text().catch(() => '');
+    console.error(
+      'Tavily search failed:',
+      response.status,
+      errorText.slice(0, 500)
+    );
+
     throw new Error(
       `Web search failed with status ${response.status}.`
     );
@@ -95,8 +107,10 @@ async function searchWeb(query) {
         const url = new URL(item.url);
 
         return (
-          url.protocol === 'https:' ||
-          url.protocol === 'http:'
+          (url.protocol === 'https:' ||
+            url.protocol === 'http:') &&
+          typeof item.title === 'string' &&
+          typeof item.content === 'string'
         );
       } catch {
         return false;
@@ -104,10 +118,12 @@ async function searchWeb(query) {
     })
     .slice(0, 5)
     .map(item => ({
-      title: String(item.title || item.url),
+      title: item.title,
       url: item.url,
-      content: String(item.content || '').slice(0, 1200)
+      content: item.content.slice(0, 1200)
     }));
+}
+
 }
 
 function demoReply(text) {
