@@ -270,4 +270,12 @@
 .auth-screen[hidden] {
   display: none !important;
 }
+/* Ensure login screen hides when hidden attribute is set */
+#authScreen[hidden] {
+  display: none !important;
+}
 
+/* Ensure workspace stays hidden while locked */
+.app-shell.auth-locked {
+  display: none !important;
+}
