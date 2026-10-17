@@ -1,12 +1,17 @@
 const $=s=>document.querySelector(s),$$=s=>[...document.querySelectorAll(s)];const state={messages:[],conversations:[],projects:[],view:'assistant',busy:false};const els={messages:$('#messages'),welcome:$('#welcomeBlock'),input:$('#messageInput'),form:$('#chatForm'),mode:$('#modeLabel'),toast:$('#toast'),modal:$('#modal')};const esc=s=>String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));function showToast(t){els.toast.textContent=t;els.toast.classList.add('show');clearTimeout(showToast.timer);showToast.timer=setTimeout(()=>els.toast.classList.remove('show'),2600)}function modal(title,text,icon='✳',primary='Got it',callback=null){$('#modalTitle').textContent=title;$('#modalText').textContent=text;$('#modalIcon').textContent=icon;$('#modalPrimary').textContent=primary;$('#modalPrimary').onclick=()=>{callback?.();els.modal.close()};els.modal.showModal()}function switchView(v){state.view=v;$$('.view').forEach(x=>x.classList.remove('active-view'));$(`#${v}View`)?.classList.add('active-view');$$('.nav-item').forEach(b=>b.classList.toggle('active',b.dataset.view===v));$('#crumbTitle').textContent=({assistant:'AI Assistant',automations:'Automations',projects:'Projects',history:'History'})[v];$('#sidebar').classList.remove('open');if(v==='history')renderHistory();if(v==='projects')renderProjects()}
+
 function renderMessages() {
   els.messages.innerHTML = state.messages.map(m => {
-    const sources = Array.isArray(m.sources) && m.sources.length
+    const validSources = Array.isArray(m.sources)
+      ? m.sources.filter(s => s && /^https?:\/\//i.test(s.url || ''))
+      : [];
+
+    const sources = validSources.length
       ? `
         <div class="message-sources">
           <strong>Sources</strong>
           <ol>
-            ${m.sources.map((s, i) => `
+            ${validSources.map((s, i) => `
               <li>
                 <a
                   href="${esc(s.url)}"
@@ -25,13 +30,17 @@ function renderMessages() {
         ${m.role === 'assistant'
           ? '<div class="message-avatar">✳</div>'
           : ''}
+
         <div class="message-body">
           ${m.role === 'assistant'
             ? '<div class="message-label">NEXORA AI</div>'
             : ''}
-          ${esc(m.content).replace(/\n/g, '<br>')}
+
+          <div>${esc(m.content || '').replace(/\n/g, '<br>')}</div>
+
           ${m.role === 'assistant' ? sources : ''}
         </div>
+
         ${m.role === 'user'
           ? '<div class="message-avatar" style="background:#2b3328;color:#e5f3d9">J</div>'
           : ''}
@@ -39,11 +48,13 @@ function renderMessages() {
     `;
   }).join('');
 
-  els.welcome.style.display = state.messages.length ? 'none' : 'block';
+  els.welcome.style.display =
+    state.messages.length ? 'none' : 'block';
 
   if (state.busy) {
     const d = document.createElement('div');
     d.className = 'message assistant';
+
     d.innerHTML = `
       <div class="message-avatar">✳</div>
       <div class="message-body">
@@ -53,6 +64,7 @@ function renderMessages() {
         </div>
       </div>
     `;
+
     els.messages.append(d);
   }
 
@@ -61,6 +73,7 @@ function renderMessages() {
     behavior: 'smooth'
   });
 }
+
 function saveHistory(){try{localStorage.setItem('nexora-history',JSON.stringify(state.conversations.slice(-30)))}catch{}}function recordConversation(){if(!state.messages.length)return;const first=state.messages.find(m=>m.role==='user');if(!first)return;const c={id:Date.now(),title:first.content.slice(0,58)+(first.content.length>58?'…':''),messages:state.messages,updated:new Date().toISOString()};state.conversations.unshift(c);state.conversations=state.conversations.slice(0,30);saveHistory()}function resizeInput(){els.input.style.height='auto';els.input.style.height=Math.min(els.input.scrollHeight,160)+'px'}
 async function sendMessage(text) {
   text = (text || '').trim();
