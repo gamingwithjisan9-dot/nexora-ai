@@ -122,6 +122,7 @@ googleLogin?.addEventListener('click', async () => {
 });
 
 
+
 supabaseClient.auth.onAuthStateChange((_event, session) => {
   const signedIn = Boolean(session);
 
@@ -130,6 +131,7 @@ supabaseClient.auth.onAuthStateChange((_event, session) => {
   }
 
   if (appShell) {
+    appShell.classList.toggle('auth-locked', !signedIn);
     appShell.style.display = signedIn ? 'flex' : 'none';
   }
 
@@ -137,6 +139,7 @@ supabaseClient.auth.onAuthStateChange((_event, session) => {
     showAuthMessage('');
   }
 });
+
 
   }
 });
