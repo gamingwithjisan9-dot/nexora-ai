@@ -1,4 +1,5 @@
 
+
 'use strict';
 
 /* =========================================================
@@ -606,25 +607,26 @@ async function sendMessage(text) {
 
     if (submitButton) submitButton.disabled = true;
 
+   
     const response = await fetch('/api/chat', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
         'Authorization': 'Bearer ' + data.session.access_token
       },
-    
-body: JSON.stringify({
-  messages: state.messages.map(message => ({
-    role: message.role,
-    content: message.content
-  })),
-  webSearch: Boolean(
-    document.querySelector('#webSearchToggle')?.checked
-  )
-})
-
+      body: JSON.stringify({
+        messages: state.messages.map(message => ({
+          role: message.role,
+          content: message.content
+        })),
+        webSearch: Boolean(
+          document.querySelector('#webSearchToggle')?.checked
+        )
+      })
+    });
 
     const result = await response.json();
+
 
     if (!response.ok) {
       throw new Error(result.error || 'Request failed');
