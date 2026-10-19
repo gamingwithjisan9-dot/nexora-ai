@@ -15,8 +15,14 @@ const AI_BASE_URL = (
 const AI_MODEL = process.env.AI_MODEL || 'gpt-4o-mini';
 const TAVILY_API_KEY = process.env.TAVILY_API_KEY || '';
 
-const SUPABASE_URL = process.env.SUPABASE_URL || '';
-const SUPABASE_ANON_KEY = process.env.SUPABASE_ANON_KEY || '';
+const SUPABASE_URL = (
+  process.env.SUPABASE_URL || ''
+).replace(/\/$/, '');
+
+const SUPABASE_ANON_KEY =
+  process.env.SUPABASE_PUBLISHABLE_KEY ||
+  process.env.SUPABASE_ANON_KEY ||
+  '';
 const mime = {
   '.html': 'text/html; charset=utf-8',
   '.css': 'text/css; charset=utf-8',
@@ -61,33 +67,30 @@ async function getBody(req) {
 }
 
 
+
 async function searchWeb(query) {
   if (!TAVILY_API_KEY) {
     throw new Error('Tavily API key is not configured.');
   }
 
-  const response = await fetch(
-    'https://api.tavily.com/search',
-    {
-      method: 'POST',
-      headers: {
-        Authorization: `Bearer ${TAVILY_API_KEY}`,
-        'Content-Type': 'application/json'
-      },
-      body: JSON.stringify({
-        query,
-        topic: 'news',
-        search_depth: 'basic',
-        days: 7,
-        max_results: 5,
-        include_answer: false
-      }),
-      signal: AbortSignal.timeout(20000)
-    }
-  );
+  const response = await fetch('https://api.tavily.com/search', {
+    method: 'POST',
+    headers: {
+      Authorization: `Bearer ${TAVILY_API_KEY}`,
+      'Content-Type': 'application/json'
+    },
+    body: JSON.stringify({
+      query,
+      search_depth: 'basic',
+      max_results: 5,
+      include_answer: false
+    }),
+    signal: AbortSignal.timeout(20000)
+  });
 
   if (!response.ok) {
     const errorText = await response.text().catch(() => '');
+
     console.error(
       'Tavily search failed:',
       response.status,
@@ -107,8 +110,7 @@ async function searchWeb(query) {
         const url = new URL(item.url);
 
         return (
-          (url.protocol === 'https:' ||
-            url.protocol === 'http:') &&
+          ['https:', 'http:'].includes(url.protocol) &&
           typeof item.title === 'string' &&
           typeof item.content === 'string'
         );
@@ -123,6 +125,7 @@ async function searchWeb(query) {
       content: item.content.slice(0, 1200)
     }));
 }
+
 
 function demoReply(text) {
   const q = text.toLowerCase();
