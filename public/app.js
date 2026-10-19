@@ -462,6 +462,27 @@ function switchView(view) {
   if (view === 'projects') renderProjects();
 }
 
+function renderAssistantContent(content) {
+  const normalized = String(content).replace(
+    /\\([#*`_[\]()>+\-|.!])/g,
+    '$1'
+  );
+
+  if (window.marked && window.DOMPurify) {
+    const html = window.marked.parse(normalized, {
+      gfm: true,
+      breaks: true
+    });
+
+    return window.DOMPurify.sanitize(html, {
+      USE_PROFILES: { html: true }
+    });
+  }
+
+  // Markdown library unavailable হলে নিরাপদ plain-text fallback
+  return esc(content).replace(/\n/g, '<br>');
+}
+
 function renderMessages() {
   if (!els.messages || !els.welcome) return;
 
