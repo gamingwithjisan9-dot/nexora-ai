@@ -95,7 +95,37 @@
 </head>
 
 <body>
-  <div class="app-shell">
+ 
+  <div class="auth-screen" id="authScreen">
+    <div class="auth-card">
+      <a class="auth-brand" href="#">NEXORA<span>AI</span></a>
+      <div class="auth-symbol">✳</div>
+      <h1 id="authTitle">Welcome back</h1>
+      <p id="authSubtitle">Sign in to continue to your AI workspace.</p>
+
+      <form id="authForm">
+        <label for="authEmail">Email address</label>
+        <input id="authEmail" type="email" placeholder="you@example.com" autocomplete="email" required>
+
+        <label for="authPassword">Password</label>
+        <input id="authPassword" type="password" placeholder="Enter your password" autocomplete="current-password" minlength="6" required>
+
+        <button class="auth-submit" id="authSubmit" type="submit">Sign in</button>
+      </form>
+
+      <button class="auth-link" id="forgotPassword" type="button">Forgot password?</button>
+      <p class="auth-message" id="authMessage" role="status"></p>
+
+      <div class="auth-divider"><span>OR</span></div>
+      <button class="auth-social" id="googleLogin" type="button">Continue with Google</button>
+
+      <p class="auth-switch">
+        <span id="authSwitchText">Don't have an account?</span>
+        <button id="authSwitch" type="button">Create account</button>
+      </p>
+    </div>
+  </div>
+ <div class="app-shell">
     <aside class="sidebar" id="sidebar">
       <a class="brand" href="#home">
         <span class="brand-mark">
