@@ -39,6 +39,236 @@ const els = {
   modal: $('#modal')
 };
 
+/* -------------------- Authentication -------------------- */
+
+let authMode = 'login';
+let authInitialized = false;
+
+const authEls = {
+  screen: $('#authScreen'),
+  form: $('#authForm'),
+  email: $('#authEmail'),
+  password: $('#authPassword'),
+  title: $('#authTitle'),
+  subtitle: $('#authSubtitle'),
+  submit: $('#authSubmit'),
+  message: $('#authMessage'),
+  switch: $('#authSwitch'),
+  switchText: $('#authSwitchText'),
+  forgot: $('#forgotPassword'),
+  google: $('#googleLogin')
+};
+
+function setAuthMessage(message, isError = false) {
+  if (!authEls.message) return;
+
+  authEls.message.textContent = message;
+  authEls.message.style.color = isError ? '#ff8b8b' : '#bde96a';
+}
+
+function showAuthScreen(show) {
+  if (authEls.screen) {
+    authEls.screen.style.display = show ? 'flex' : 'none';
+  }
+
+  const appShell = $('.app-shell');
+
+  if (appShell) {
+    appShell.style.display = show ? 'none' : '';
+  }
+}
+
+function updateAuthMode() {
+  const signup = authMode === 'signup';
+
+  if (authEls.title) {
+    authEls.title.textContent = signup ? 'Create your account' : 'Welcome back';
+  }
+
+  if (authEls.subtitle) {
+    authEls.subtitle.textContent = signup
+      ? 'Sign up to start using your AI workspace.'
+      : 'Sign in to continue to your AI workspace.';
+  }
+
+  if (authEls.submit) {
+    authEls.submit.textContent = signup ? 'Create account' : 'Sign in';
+  }
+
+  if (authEls.password) {
+    authEls.password.autocomplete = signup
+      ? 'new-password'
+      : 'current-password';
+  }
+
+  if (authEls.switchText) {
+    authEls.switchText.textContent = signup
+      ? 'Already have an account?'
+      : "Don't have an account?";
+  }
+
+  if (authEls.switch) {
+    authEls.switch.textContent = signup ? 'Sign in' : 'Create account';
+  }
+
+  if (authEls.forgot) {
+    authEls.forgot.style.display = signup ? 'none' : '';
+  }
+
+  setAuthMessage('');
+}
+
+async function initializeAuthentication() {
+  const client = getSupabaseClient();
+
+  if (!client || !authEls.screen || !authEls.form) {
+    console.error('NEXORA: Supabase client or authentication HTML is missing.');
+    showAuthScreen(false);
+    return;
+  }
+
+  if (authInitialized) return;
+  authInitialized = true;
+
+  updateAuthMode();
+
+  authEls.switch?.addEventListener('click', () => {
+    authMode = authMode === 'login' ? 'signup' : 'login';
+    updateAuthMode();
+  });
+
+  authEls.form.addEventListener('submit', async (event) => {
+    event.preventDefault();
+
+    const email = authEls.email?.value.trim();
+    const password = authEls.password?.value;
+
+    if (!email || !password) {
+      setAuthMessage('Email ও password লিখো।', true);
+      return;
+    }
+
+    if (authEls.submit) {
+      authEls.submit.disabled = true;
+      authEls.submit.textContent = 'Please wait…';
+    }
+
+    setAuthMessage('');
+
+    try {
+      let result;
+
+      if (authMode === 'signup') {
+        result = await client.auth.signUp({
+          email,
+          password,
+          options: {
+            emailRedirectTo: window.location.origin
+          }
+        });
+
+        if (result.error) throw result.error;
+
+        if (!result.data.session) {
+          setAuthMessage(
+            'Account তৈরি হয়েছে। Email inbox খুলে confirmation link-এ ক্লিক করো।'
+          );
+          return;
+        }
+      } else {
+        result = await client.auth.signInWithPassword({
+          email,
+          password
+        });
+
+        if (result.error) throw result.error;
+      }
+
+      setAuthMessage('Login successful!');
+
+      await refreshAuthenticationState();
+    } catch (error) {
+      console.error('NEXORA authentication error:', error);
+      setAuthMessage(error.message || 'Authentication failed.', true);
+    } finally {
+      if (authEls.submit) {
+        authEls.submit.disabled = false;
+        authEls.submit.textContent =
+          authMode === 'signup' ? 'Create account' : 'Sign in';
+      }
+    }
+  });
+
+  authEls.forgot?.addEventListener('click', async () => {
+    const email = authEls.email?.value.trim();
+
+    if (!email) {
+      setAuthMessage('আগে তোমার email address লিখো।', true);
+      authEls.email?.focus();
+      return;
+    }
+
+    setAuthMessage('Password reset email পাঠানো হচ্ছে…');
+
+    try {
+      const { error } = await client.auth.resetPasswordForEmail(email, {
+        redirectTo: window.location.origin
+      });
+
+      if (error) throw error;
+
+      setAuthMessage(
+        'যদি এই email-এ account থাকে, password reset link পাঠানো হবে।'
+      );
+    } catch (error) {
+      setAuthMessage(error.message || 'Password reset failed.', true);
+    }
+  });
+
+  authEls.google?.addEventListener('click', async () => {
+    setAuthMessage('Google sign-in খুলছে…');
+
+    try {
+      const { error } = await client.auth.signInWithOAuth({
+        provider: 'google',
+        options: {
+          redirectTo: window.location.origin
+        }
+      });
+
+      if (error) throw error;
+    } catch (error) {
+      setAuthMessage(error.message || 'Google sign-in failed.', true);
+    }
+  });
+
+  client.auth.onAuthStateChange((_event, session) => {
+    showAuthScreen(!session?.access_token);
+  });
+
+  await refreshAuthenticationState();
+}
+
+async function refreshAuthenticationState() {
+  const client = getSupabaseClient();
+
+  if (!client) {
+    showAuthScreen(true);
+    return;
+  }
+
+  const { data, error } = await client.auth.getSession();
+
+  if (error) {
+    console.error('NEXORA session check failed:', error);
+    showAuthScreen(true);
+    return;
+  }
+
+  showAuthScreen(!data?.session?.access_token);
+}
+
+
 /* -------------------- Basic helpers -------------------- */
 
 const esc = (value) =>
@@ -776,3 +1006,4 @@ async function checkServerHealth() {
 renderMessages();
 renderProjects();
 checkServerHealth();
+initializeAuthentication();
